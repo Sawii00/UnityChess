@@ -1,0 +1,45 @@
+ISSUES:
+- out of bound 
+- promoted pawns crash sometimes
+
+
+
+- en passant
+- castling
+
+- resign
+- draw
+    - stalemate
+    - insufficient material
+    - repetition
+    - mutual agreement
+    - (40 moves)
+
+- promotion
+
+
+Time:
+- min, sec, other
+- game settings (increments)
+
+Visual
+    - check --> red king
+    - last move highlighted
+    - Arrows
+    - highlighted square
+
+
+Sounds
+
+Premoves
+- single move
+- no time penalty
+
+
+
+
+
+- Engine
+- which aperture
+- analysis board
+- save moves and save game to be analyzed
