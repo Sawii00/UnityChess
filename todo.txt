@@ -9,7 +9,6 @@ ISSUES:
 
 - resign
 - draw
-    - stalemate
     - insufficient material
     - repetition
     - mutual agreement

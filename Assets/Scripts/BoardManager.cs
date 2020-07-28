@@ -31,6 +31,9 @@ public class BoardManager : MonoBehaviour
     private Pieces[] board = new Pieces[64];
     private GameManager gm;
 
+    private bool castlingAvailableBlack = true;
+    private bool castlingAvailableWhite = true;
+
     // Start is called before the first frame update
     private void Start()
     {
@@ -324,6 +327,14 @@ public class BoardManager : MonoBehaviour
         return CheckMate(color);
     }
 
+    private bool CastlingAvailable(Color color)
+    {
+        if (color == Color.Black)
+            return castlingAvailableBlack;
+        else
+            return castlingAvailableWhite;
+    }
+
     private bool CheckMate(Color color)
     {
         for (int src_x = 0; src_x < 8; ++src_x)
@@ -438,13 +449,49 @@ public class BoardManager : MonoBehaviour
 
     private bool IsValidMove(int src_x, int src_y, int dest_x, int dest_y)
     {
+        if (src_x < 0 || src_x > 7 || src_y < 0 || src_y > 7 || dest_x < 0 || dest_x > 7 || dest_y < 0 || dest_y > 7)
+            return false;
         Pieces p = Get(src_x, src_y);
         if (p == Pieces.BlackBishop || p == Pieces.WhiteBishop)
             return ValidBishopMove(src_x, src_y, dest_x, dest_y);
         else if (p == Pieces.BlackRook || p == Pieces.WhiteRook)
             return ValidRookMove(src_x, src_y, dest_x, dest_y);
         else if (p == Pieces.BlackKing || p == Pieces.WhiteKing)
-            return ValidKingMove(src_x, src_y, dest_x, dest_y);
+        {
+            if (src_x == 4 && src_y == 0  && GetColor(Get(src_x, src_y)) == Color.White && CastlingAvailable(Color.White))
+            {
+                if(dest_x == 6 && dest_y == 0)
+                {
+                    Debug.Log("Here");
+
+                    return ValidKingMove(4, 0, 5, 0) && ValidKingMove(5, 0, 6, 0);
+
+                }
+                else if(dest_x == 2 && dest_y == 0)
+                {
+                    return ValidKingMove(4, 0, 3, 0) && ValidKingMove(3, 0, 2, 0);
+                }
+
+                return ValidKingMove(src_x, src_y, dest_x, dest_y);
+            }
+            else if (src_x == 4 && src_y == 7 && GetColor(Get(src_x, src_y)) == Color.Black && CastlingAvailable(Color.Black)) 
+            {
+                if (dest_x == 6 && dest_y == 7)
+                {
+                    return ValidKingMove(4, 7, 5, 7) && ValidKingMove(5, 7, 6, 7);
+
+                }
+                else if (dest_x == 2 && dest_y == 7)
+                {
+                    return ValidKingMove(4, 7, 3, 7) && ValidKingMove(3, 7, 2, 7);
+                }
+                return ValidKingMove(src_x, src_y, dest_x, dest_y);
+            }
+            else
+            {
+                return ValidKingMove(src_x, src_y, dest_x, dest_y);
+            }
+        }
         else if (p == Pieces.BlackQueen || p == Pieces.WhiteQueen)
             return ValidQueenMove(src_x, src_y, dest_x, dest_y);
         else if (p == Pieces.BlackPawn || p == Pieces.WhitePawn)
@@ -713,6 +760,7 @@ public class BoardManager : MonoBehaviour
         if (src_x == dest_x && src_y == dest_y)
             return false;
 
+      
         if (!(Mathf.Abs(src_x - dest_x) <= 1 && Mathf.Abs(src_y - dest_y) <= 1))
             return false;
 
@@ -728,6 +776,7 @@ public class BoardManager : MonoBehaviour
             return false;
         }
 
+        
         if (ValidKingMove(src_x, src_y, dest_x, dest_y))
         {
             if (Get(dest_x, dest_y) != Pieces.Null)

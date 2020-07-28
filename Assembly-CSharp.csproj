@@ -70,7 +70,6 @@
     <Compile Include="Assets\Scripts\PieceMovement.cs" />
     <Compile Include="Assets\Scripts\PopupHandler.cs" />
     <Compile Include="Assets\Scripts\TimeSelection.cs" />
-    <None Include="Assets\todo.txt" />
     <None Include="Assets\Free Low Poly Chess Set\README.txt" />
     <Reference Include="UnityEngine">
       <HintPath>D:/Programmi/UnityEditor/2019.4.5f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
