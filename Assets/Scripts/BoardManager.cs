@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 
 public enum Pieces
 {
@@ -26,23 +27,40 @@ public enum Color
     White, Black
 }
 
+public enum Side
+{
+    KingSide, QueenSide
+}
+
+
 public class BoardManager : MonoBehaviour
 {
     private Pieces[] board = new Pieces[64];
-    private GameManager gm;
+    public GameObject[] pieces3d = new GameObject[12];
+    public GameManager gm;
 
-    private bool castlingAvailableBlack = true;
-    private bool castlingAvailableWhite = true;
+
+    int src_x_passant = -1;
+    int src_y_passant = -1;
+    
+    bool[] CastleArray = new bool[6]; //WhiteRookQueen, WhiteKing, WhiteRookKing, BlackRookQueen, BlackKing, BlackRookKing
+    
 
     // Start is called before the first frame update
     private void Start()
     {
         setupBoard();
-        gm = FindObjectOfType<GameManager>();
+
+        
     }
 
     private void setupBoard()
     {
+        for (int i = 0; i < 6; ++i)
+        {
+            CastleArray[i] = true;
+        }
+
         for (int i = 8; i < 16; ++i)
         {
             board[i] = Pieces.WhitePawn;
@@ -76,9 +94,34 @@ public class BoardManager : MonoBehaviour
         board[63] = Pieces.BlackRook;
     }
 
+    private void UpdateBoard()
+    {
+        
+        for (int x = 0; x < 8; ++x)
+        {
+            for (int y = 0; y < 8; ++y)
+            {
+                RaycastHit hit;
+                if (Physics.Raycast(new UnityEngine.Vector3(x, 10, y), -UnityEngine.Vector3.up, out hit, Mathf.Infinity, 1 << 8))
+                {
+                    Destroy(hit.collider.gameObject);
+                }
+                Pieces p = Get(x, y);
+
+                if(p != Pieces.Null)
+                    Instantiate(pieces3d[(int)(p) - 1], new UnityEngine.Vector3(x, 0, y), pieces3d[(int)(p) - 1].transform.rotation);
+
+            }
+        }
+    }
+
     public bool Move(int src_x, int src_y, int dest_x, int dest_y, out bool eaten)
     {
         Pieces p = Get(src_x, src_y);
+
+        Debug.Log(src_x_passant);
+        Debug.Log(src_y_passant);
+        
         if ((gm.WhiteTurn() && IsWhite(p)) || (!gm.WhiteTurn() && IsBlack(p)))
         {
             if (p == Pieces.BlackBishop || p == Pieces.WhiteBishop)
@@ -115,7 +158,6 @@ public class BoardManager : MonoBehaviour
                         if (CheckMate(GetOtherColor(p)))
                         {
                             gm.EndGameCheckmate(GetColor(p));
-
                         }
                     }
                     else
@@ -311,7 +353,6 @@ public class BoardManager : MonoBehaviour
         return false;
     }
 
-
     private Color GetColor(Pieces p)
     {
         return IsWhite(p) ? Color.White : Color.Black;
@@ -327,12 +368,31 @@ public class BoardManager : MonoBehaviour
         return CheckMate(color);
     }
 
-    private bool CastlingAvailable(Color color)
+    private bool CastlingAvailable(Color color, Side side)
     {
-        if (color == Color.Black)
-            return castlingAvailableBlack;
-        else
-            return castlingAvailableWhite;
+        if (color == Color.White)
+        {
+            if (side == Side.KingSide)
+            {
+                return CastleArray[1] && CastleArray[2];
+            }
+            else 
+            {
+                return CastleArray[1] && CastleArray[0];
+            }
+        }
+        else 
+        {
+            if (side == Side.KingSide)
+            {
+                return CastleArray[5] && CastleArray[4];
+            }
+            else
+            {
+                return CastleArray[4] && CastleArray[3];
+
+            }
+        }
     }
 
     private bool CheckMate(Color color)
@@ -480,12 +540,40 @@ public class BoardManager : MonoBehaviour
         {
             if (ValidPawnMove(src_x, src_y, dest_x, dest_y))
             {
+                
                 if (Get(dest_x, dest_y) != Pieces.Null)
+                {
                     eaten = true;
-                else
+                    Set(dest_x, dest_y, this_piece);
+                    Set(src_x, src_y, Pieces.Null);
+                }
+                else if (dest_x == src_x_passant && dest_y == src_y_passant)
+                {
                     eaten = false;
-                Set(dest_x, dest_y, this_piece);
-                Set(src_x, src_y, Pieces.Null);
+                    Set(dest_x, this_piece == Pieces.BlackPawn ? dest_y + 1 : dest_y - 1, Pieces.Null);
+                    Set(dest_x, dest_y, this_piece);
+                    Set(src_x, src_y, Pieces.Null);
+                    UpdateBoard();
+                }
+                else
+                {
+                    eaten = false;
+                    Set(dest_x, dest_y, this_piece);
+                    Set(src_x, src_y, Pieces.Null);
+                }
+
+
+                if (Math.Abs(dest_y - src_y) == 2)
+                {
+                    src_x_passant = src_x;
+                    src_y_passant = this_piece == Pieces.BlackPawn ? dest_y + 1 : dest_y - 1;
+                }
+                else 
+                {
+                    src_x_passant = -1;
+                    src_y_passant = -1;
+                }
+
                 return true;
             }
             else
@@ -510,6 +598,10 @@ public class BoardManager : MonoBehaviour
             {
                 return CheckEndPosition(src_x, src_y, dest_x, dest_y, this_piece);
             }
+            else if (Mathf.Abs(dest_x - src_x) == 1 && dest_y - src_y == 1 && dest_x == src_x_passant && dest_y == src_y_passant)
+            {
+                return CheckEndPosition(src_x, src_y, dest_x, dest_y, this_piece);
+            }
             else if (src_x == dest_x && dest_y - src_y == 1 && Get(dest_x, dest_y) == Pieces.Null)
             {
                 return CheckEndPosition(src_x, src_y, dest_x, dest_y, this_piece);
@@ -528,6 +620,10 @@ public class BoardManager : MonoBehaviour
             else if (Get(dest_x, dest_y) != Pieces.Null && Mathf.Abs(dest_x - src_x) == 1 && src_y - dest_y == 1)
             {
                 return CheckEndPosition(src_x, src_y, dest_x, dest_y, this_piece);
+            }
+            else if (Mathf.Abs(dest_x - src_x) == 1 && src_y - dest_y == 1 && dest_x == src_x_passant && dest_y == src_y_passant)
+            {
+                return CheckEndPosition(src_x, src_y, dest_x, dest_y, this_piece); 
             }
             else if (src_x == dest_x && src_y - dest_y == 1 && Get(dest_x, dest_y) == Pieces.Null)
             {
@@ -552,6 +648,8 @@ public class BoardManager : MonoBehaviour
         {
             if (ValidBishopMove(src_x, src_y, dest_x, dest_y))
             {
+                src_x_passant = -1;
+                src_y_passant = -1;
                 if (Get(dest_x, dest_y) != Pieces.Null)
                     eaten = true;
                 else
@@ -603,12 +701,24 @@ public class BoardManager : MonoBehaviour
         {
             if (ValidRookMove(src_x, src_y, dest_x, dest_y))
             {
+                src_x_passant = -1;
+                src_y_passant = -1;
                 if (Get(dest_x, dest_y) != Pieces.Null)
                     eaten = true;
                 else
                     eaten = false;
                 Set(dest_x, dest_y, this_piece);
                 Set(src_x, src_y, Pieces.Null);
+
+                if (src_x == 0 && src_y == 0)
+                    CastleArray[0] = false;
+                else if (src_x == 7 && src_y == 0)
+                    CastleArray[2] = false;
+                else if (src_x == 0 && src_y == 7)
+                    CastleArray[3] = false;
+                else if (src_x == 7 && src_y == 7)
+                    CastleArray[5] = false;
+                
 
                 return true;
             }
@@ -670,6 +780,8 @@ public class BoardManager : MonoBehaviour
 
         if (ValidKnightMove(src_x, src_y, dest_x, dest_y))
         {
+            src_x_passant = -1;
+            src_y_passant = -1;
             if (Get(dest_x, dest_y) != Pieces.Null)
                 eaten = true;
             else
@@ -704,6 +816,8 @@ public class BoardManager : MonoBehaviour
 
         if (ValidQueenMove(src_x, src_y, dest_x, dest_y))
         {
+            src_x_passant = -1;
+            src_y_passant = -1;
             if (Get(dest_x, dest_y) != Pieces.Null)
                 eaten = true;
             else
@@ -719,6 +833,48 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    private void Castle(Color c, Side s)
+    {
+        if (c == Color.White)
+        {
+            if (s == Side.KingSide)
+            {
+                Set(5, 0, Pieces.WhiteRook);
+                Set(7, 0, Pieces.Null);
+                Set(6, 0, Pieces.WhiteKing);
+                Set(4, 0, Pieces.Null);
+            }
+            else
+            {
+                Set(3, 0, Pieces.WhiteRook);
+                Set(2, 0, Pieces.WhiteKing);
+                Set(0, 0, Pieces.Null);
+                Set(4, 0, Pieces.Null);
+
+            }
+        }
+        else
+        {
+            if (s == Side.KingSide)
+            {
+                Set(5, 7, Pieces.BlackRook);
+                Set(7, 7, Pieces.Null);
+                Set(6, 7, Pieces.BlackKing);
+                Set(4, 7, Pieces.Null);
+
+            }
+            else
+            {
+                Set(3, 7, Pieces.BlackRook);
+                Set(2, 7, Pieces.BlackKing);
+                Set(0, 7, Pieces.Null);
+                Set(4, 7, Pieces.Null);
+
+            }
+        }
+        UpdateBoard();
+    }
+
     private bool ValidKingMove(int src_x, int src_y, int dest_x, int dest_y)
     {
         Pieces this_piece = Get(src_x, src_y);
@@ -726,7 +882,6 @@ public class BoardManager : MonoBehaviour
         if (src_x == dest_x && src_y == dest_y)
             return false;
 
-      
         if (!(Mathf.Abs(src_x - dest_x) <= 1 && Mathf.Abs(src_y - dest_y) <= 1))
             return false;
 
@@ -742,60 +897,78 @@ public class BoardManager : MonoBehaviour
             return false;
         }
 
-        //insert here castling (FINISH)
-        if (src_x == 4 && src_y == 0 && GetColor(p) == Color.White && CastlingAvailable(Color.White))
+        if (src_x == 4 && src_y == 0)
         {
-            if (dest_x == 6 && dest_y == 0)
+            if (dest_x == 6 && dest_y == 0 && CastlingAvailable(Color.White, Side.KingSide))
             {
                 eaten = false;
-                return ValidKingMove(4, 0, 5, 0) && ValidKingMove(5, 0, 6, 0);
+                bool res = ValidKingMove(4, 0, 5, 0) && ValidKingMove(5, 0, 6, 0);
 
+                if (res)
+                {
+                    Castle(Color.White, Side.KingSide);
+                    CastleArray[1] = false;
+                }
+                return res;
             }
-            else if (dest_x == 2 && dest_y == 0)
+            else if (dest_x == 2 && dest_y == 0 && CastlingAvailable(Color.White, Side.QueenSide))
             {
                 eaten = false;
-                return ValidKingMove(4, 0, 3, 0) && ValidKingMove(3, 0, 2, 0);
+                bool res = ValidKingMove(4, 0, 3, 0) && ValidKingMove(3, 0, 2, 0);
+                if (res)
+                { 
+                    Castle(Color.White, Side.QueenSide);
+                    CastleArray[1] = false;
+                }
+                return res;
             }
-            eaten = false;
-
-            return ValidKingMove(src_x, src_y, dest_x, dest_y);
+            
         }
-        else if (src_x == 4 && src_y == 7 && GetColor(p) == Color.Black && CastlingAvailable(Color.Black))
+        else if (src_x == 4 && src_y == 7 )
         {
-            if (dest_x == 6 && dest_y == 7)
+            if (dest_x == 6 && dest_y == 7 && CastlingAvailable(Color.Black, Side.QueenSide))
             {
                 eaten = false;
 
-                return ValidKingMove(4, 7, 5, 7) && ValidKingMove(5, 7, 6, 7);
-
+                bool res = ValidKingMove(4, 7, 5, 7) && ValidKingMove(5, 7, 6, 7);
+                if (res)
+                {
+                    Castle(Color.Black, Side.KingSide);
+                    CastleArray[4] = false;
+                }
+                return res;
             }
-            else if (dest_x == 2 && dest_y == 7)
+            else if (dest_x == 2 && dest_y == 7 && CastlingAvailable(Color.Black, Side.KingSide))
             {
                 eaten = false;
 
-                return ValidKingMove(4, 7, 3, 7) && ValidKingMove(3, 7, 2, 7);
+                bool res = ValidKingMove(4, 7, 3, 7) && ValidKingMove(3, 7, 2, 7);
+                if (res)
+                {
+                    Castle(Color.Black, Side.QueenSide);
+                    CastleArray[4] = false;
+                }
+                return res;
             }
-            eaten = false;
-
-            return ValidKingMove(src_x, src_y, dest_x, dest_y);
+           
         }
-        else
-        {
-            eaten = false;
-
-            return ValidKingMove(src_x, src_y, dest_x, dest_y);
-        }
-
-
-
+        
         if (ValidKingMove(src_x, src_y, dest_x, dest_y))
         {
+            src_x_passant = -1;
+            src_y_passant = -1;
             if (Get(dest_x, dest_y) != Pieces.Null)
                 eaten = true;
             else
                 eaten = false;
             Set(dest_x, dest_y, this_piece);
             Set(src_x, src_y, Pieces.Null);
+
+            if (Get(dest_x, dest_y) == Pieces.WhiteKing)
+                CastleArray[1] = false;
+            else
+                CastleArray[4] = false;
+            
             return true;
         }
         else
@@ -803,5 +976,6 @@ public class BoardManager : MonoBehaviour
             eaten = false;
             return false;
         }
+        
     }
 }

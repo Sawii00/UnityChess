@@ -2,10 +2,7 @@ ISSUES:
 - out of bound 
 - promoted pawns crash sometimes
 
-
-
-- en passant
-- castling
+-fen and pgn
 
 - resign
 - draw
@@ -14,12 +11,14 @@ ISSUES:
     - mutual agreement
     - (40 moves)
 
+
 - promotion
 
 
 Time:
 - min, sec, other
 - game settings (increments)
+
 
 Visual
     - check --> red king
@@ -33,9 +32,6 @@ Sounds
 Premoves
 - single move
 - no time penalty
-
-
-
 
 
 - Engine

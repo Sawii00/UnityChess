@@ -4,10 +4,11 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Security.Cryptography;
 using UnityEngine;
+using System.Text.RegularExpressions;
 
 public class PieceMovement : MonoBehaviour {
     public Camera cam;
-    public BoardManager bm;
+    private BoardManager bm;
     private UnityEngine.Color mouseOverColor;
     private UnityEngine.Color originalColor;
     private bool dragging = false;
@@ -24,6 +25,24 @@ public class PieceMovement : MonoBehaviour {
         mask = ~mask;
         originalColor = GetComponent<Renderer>().material.color;
         mouseOverColor = UnityEngine.Color.yellow;
+        bm = FindObjectOfType<BoardManager>();
+
+        Camera[] CamArr = FindObjectsOfType<Camera>();
+
+        if (Regex.IsMatch(name, ".*Light.*"))
+        {
+            if (CamArr[0].gameObject.name == "Main Camera White")
+                cam = CamArr[0];
+            else
+                cam = CamArr[1];
+        }
+        else
+        {
+            if (CamArr[0].gameObject.name == "Main Camera Black")
+                cam = CamArr[0];
+            else
+                cam = CamArr[1];
+        }
     }
 
 
@@ -50,6 +69,7 @@ public class PieceMovement : MonoBehaviour {
         dragging = false;
         dest_x = (int)transform.position.x;
         dest_y = (int)transform.position.z;
+
 
         if (!bm.Move(board_x, board_y, dest_x, dest_y, out eaten))
         {
