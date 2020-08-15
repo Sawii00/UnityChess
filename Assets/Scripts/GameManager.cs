@@ -14,11 +14,15 @@ public class GameManager : MonoBehaviour
     public PopupHandler popup;
     private bool stop = false;
 
+    private float increment = 0.0f; 
+
     // Start is called before the first frame update
     private void Start()
     {
         time_white = PlayerPrefs.GetFloat("Time");
-        time_black = PlayerPrefs.GetFloat("Time");
+        time_black = time_white;
+        increment = PlayerPrefs.GetFloat("Increment");
+
     }
 
     public bool WhiteTurn()
@@ -28,7 +32,16 @@ public class GameManager : MonoBehaviour
 
     public void SwitchTurn()
     {
-        whiteTurn = !whiteTurn;
+        if (whiteTurn)
+        {
+            whiteTurn = false;
+            time_white += increment;
+        }
+        else 
+        {
+            whiteTurn = true;
+            time_black += increment;
+        }
     }
 
     public void EndGameTimeout(Color color)
@@ -51,6 +64,19 @@ public class GameManager : MonoBehaviour
         popup.Show();
     }
 
+    private string FormatTime(float seconds)
+    {
+        int mins = (int)seconds / 60;
+        int secs = (int)seconds % 60;
+
+        if (secs >= 10)
+            return "" + mins + ":" + secs;
+        else if (secs < 10)
+            return "" + mins + ":0" + secs;
+        else
+            return "" + mins;
+    }
+
     // Update is called once per frame
     private void FixedUpdate()
     {
@@ -67,8 +93,8 @@ public class GameManager : MonoBehaviour
             else
             {
 
-                time_text_black.text = "" + (int)time_black;
-                time_text_white.text = "" + (int)time_white;
+                time_text_black.text = FormatTime(time_black);
+                time_text_white.text = FormatTime(time_white);
                 if (whiteTurn)
                 {
                     time_white -= Time.deltaTime;

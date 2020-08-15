@@ -1,7 +1,8 @@
 ISSUES:
 - out of bound 
-- promoted pawns crash sometimes
 
+
+- promotion (GUI)
 -fen and pgn
 
 - resign
@@ -12,12 +13,6 @@ ISSUES:
     - (40 moves)
 
 
-- promotion
-
-
-Time:
-- min, sec, other
-- game settings (increments)
 
 
 Visual

@@ -115,6 +115,39 @@ public class BoardManager : MonoBehaviour
         }
     }
 
+    private void CheckPromotion()
+    {
+        for (int x = 0; x < 8; ++x)
+        {
+            if (Get(x, 0) == Pieces.BlackPawn)
+            {
+                Promote(x, 0, Pieces.BlackQueen);
+            }
+            else if (Get(x, 7) == Pieces.WhitePawn)
+            {
+                Promote(x, 7, Pieces.WhiteQueen);
+            }
+        }
+        
+    }
+
+    private void Promote(int x, int y, Pieces new_piece)
+    {
+        Set(x, y, new_piece);
+        UpdateBoard();
+        if (StaleMate(GetOtherColor(new_piece)))
+        {
+            gm.EndGameDraw(GetColor(new_piece), "Stalemate");
+        }
+        
+        if (CheckMate(GetOtherColor(new_piece)))
+        {
+            gm.EndGameCheckmate(GetColor(new_piece));
+        }
+
+    }
+
+
     public bool Move(int src_x, int src_y, int dest_x, int dest_y, out bool eaten)
     {
         Pieces p = Get(src_x, src_y);
@@ -238,6 +271,7 @@ public class BoardManager : MonoBehaviour
                     }
                     gm.SwitchTurn();
                 }
+                CheckPromotion();
                 return res;
             }
             else if (p == Pieces.BlackKnight || p == Pieces.WhiteKnight)
