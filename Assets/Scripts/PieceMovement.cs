@@ -73,7 +73,7 @@ public class PieceMovement : MonoBehaviour {
 
         if (!bm.Move(board_x, board_y, dest_x, dest_y, out eaten))
         {
-      
+            
             transform.position = new UnityEngine.Vector3(board_x, 0, board_y);
 
         }

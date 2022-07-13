@@ -16,6 +16,7 @@ ISSUES:
 
 
 Visual
+-> maybe a cell drawing subsystem( for arrows and circles and general coloring of the cell)
     - check --> red king
     - last move highlighted
     - Arrows

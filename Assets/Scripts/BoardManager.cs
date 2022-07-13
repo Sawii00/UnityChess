@@ -42,6 +42,17 @@ public class BoardManager : MonoBehaviour
 
     int src_x_passant = -1;
     int src_y_passant = -1;
+
+    private bool is_white_on_check = false;
+    private bool is_black_on_check = false;
+    public UnityEngine.Material originalMaterialBlack;
+    public UnityEngine.Material originalMaterialWhite;
+
+    private GameObject white_king;
+    private GameObject black_king;
+
+    private int n_of_moves = 0;
+   
     
     bool[] CastleArray = new bool[6]; //WhiteRookQueen, WhiteKing, WhiteRookKing, BlackRookQueen, BlackKing, BlackRookKing
     
@@ -52,6 +63,70 @@ public class BoardManager : MonoBehaviour
         setupBoard();
 
         
+
+
+    }
+
+    private void SwitchTurn()
+    {
+        ++n_of_moves;
+        gm.SwitchTurn();
+    }
+
+    //@TODO(sawii): refactor this shit
+    private void Update()
+    {
+        int n_of_moves_internal = 0;
+
+        if (n_of_moves != n_of_moves_internal)
+        {
+            n_of_moves_internal = n_of_moves;
+            
+            UpdateKings();
+
+            is_white_on_check = CheckForChecks(Color.White);
+            is_black_on_check = CheckForChecks(Color.Black);
+
+            if (is_white_on_check)
+                white_king.GetComponent<Renderer>().material.color = UnityEngine.Color.red;
+            else
+                white_king.GetComponent<Renderer>().material = originalMaterialWhite;
+
+            if (is_black_on_check)
+                black_king.GetComponent<Renderer>().material.color = UnityEngine.Color.red;
+            else
+                black_king.GetComponent<Renderer>().material = originalMaterialBlack;
+
+        }
+    }
+
+    //@TODO(sawii): this iterates for no reason
+    private void UpdateKings()
+    {
+        for (int x = 0; x < 8; ++x)
+        {
+            for (int y = 0; y < 8; ++y)
+            {
+                if (Get(x, y) == Pieces.BlackKing)
+                {
+                    RaycastHit hit;
+
+                    if (Physics.Raycast(new UnityEngine.Vector3(x, 10, y), -UnityEngine.Vector3.up, out hit, Mathf.Infinity, 1 << 8))
+                    {
+                        black_king = hit.collider.gameObject;
+                    }
+                }
+                else if (Get(x, y) == Pieces.WhiteKing)
+                {
+                    RaycastHit hit;
+
+                    if (Physics.Raycast(new UnityEngine.Vector3(x, 10, y), -UnityEngine.Vector3.up, out hit, Mathf.Infinity, 1 << 8))
+                    {
+                        white_king = hit.collider.gameObject;
+                    }
+                }
+            }
+        }
     }
 
     private void setupBoard()
@@ -152,8 +227,6 @@ public class BoardManager : MonoBehaviour
     {
         Pieces p = Get(src_x, src_y);
 
-        Debug.Log(src_x_passant);
-        Debug.Log(src_y_passant);
         
         if ((gm.WhiteTurn() && IsWhite(p)) || (!gm.WhiteTurn() && IsBlack(p)))
         {
@@ -176,7 +249,7 @@ public class BoardManager : MonoBehaviour
                             gm.EndGameDraw(GetColor(p), "Stalemate");
                         }
                     }
-                    gm.SwitchTurn();
+                    SwitchTurn();
                 }
 
                 return res;
@@ -200,7 +273,7 @@ public class BoardManager : MonoBehaviour
                             gm.EndGameDraw(GetColor(p), "Stalemate");
                         }
                     }
-                    gm.SwitchTurn();
+                    SwitchTurn();
                 }
                 return res;
             }
@@ -223,7 +296,7 @@ public class BoardManager : MonoBehaviour
                             gm.EndGameDraw(GetColor(p), "Stalemate");
                         }
                     }
-                    gm.SwitchTurn();
+                    SwitchTurn();
                 }
                 return res;
             }
@@ -246,7 +319,7 @@ public class BoardManager : MonoBehaviour
                             gm.EndGameDraw(GetColor(p), "Stalemate");
                         }
                     }
-                    gm.SwitchTurn();
+                    SwitchTurn();
                 }
                 return res;
             }
@@ -269,7 +342,7 @@ public class BoardManager : MonoBehaviour
                             gm.EndGameDraw(GetColor(p), "Stalemate");
                         }
                     }
-                    gm.SwitchTurn();
+                    SwitchTurn();
                 }
                 CheckPromotion();
                 return res;
@@ -293,7 +366,7 @@ public class BoardManager : MonoBehaviour
                             gm.EndGameDraw(GetColor(p), "Stalemate");
                         }
                     }
-                    gm.SwitchTurn();
+                    SwitchTurn();
                 }
                 return res;
             }

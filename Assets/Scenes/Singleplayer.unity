@@ -2054,6 +2054,16 @@ PrefabInstance:
       propertyPath: gm
       value: 
       objectReference: {fileID: 196196754}
+    - target: {fileID: 5494517917799237337, guid: 1b3ff128396aff04f8fc9090c615d157,
+        type: 3}
+      propertyPath: originalMaterialBlack
+      value: 
+      objectReference: {fileID: 2100000, guid: 5a3ab2601b4968341a959d89a206c835, type: 2}
+    - target: {fileID: 5494517917799237337, guid: 1b3ff128396aff04f8fc9090c615d157,
+        type: 3}
+      propertyPath: originalMaterialWhite
+      value: 
+      objectReference: {fileID: 2100000, guid: adefce1589f7e584ebd7c6d597a46ee9, type: 2}
     - target: {fileID: 5494517917799237342, guid: 1b3ff128396aff04f8fc9090c615d157,
         type: 3}
       propertyPath: m_Name
